@@ -25,57 +25,61 @@ def main():
 
     st.sidebar.title("메뉴")
     if not st.session_state.get("logged_in", False):
-        if st.sidebar.button("카카오 로그인"):
+        # 카카오 로그인 버튼 생성
+        kakao_button_html = """
+        <style>
+            .kakao-login-btn {
+                background-color: #FEE500;
+                color: #000000;
+                padding: 10px 20px;
+                border-radius: 5px;
+                border: none;
+                font-weight: bold;
+                text-align: center;
+                text-decoration: none;
+                display: inline-block;
+                font-size: 16px;
+                margin: 4px 2px;
+                cursor: pointer;
+                width: 100%;
+            }
+        </style>
+        """
+        st.sidebar.markdown(kakao_button_html, unsafe_allow_html=True)
+        
+        # 버튼 클릭 시 바로 카카오 로그인 처리
+        if st.sidebar.button("카카오 로그인", key="kakao_login_btn"):
             try:
-                # 환경 변수 확인
-                st.sidebar.write(f"SUPABASE_URL: {supabase_url[:10]}..." if supabase_url else "SUPABASE_URL 없음")
-                st.sidebar.write(f"SUPABASE_KEY: {supabase_key[:5]}..." if supabase_key else "SUPABASE_KEY 없음")
-                st.sidebar.write(f"REDIRECT_URI: {kakao_redirect_uri_env}" if kakao_redirect_uri_env else "REDIRECT_URI 없음")
-                
                 # Supabase의 OAuth 로그인 기능 사용
                 auth_response = supabase.auth.sign_in_with_oauth({
                     "provider": "kakao",
                     "options": {
-                        "redirect_to": kakao_redirect_uri_env
+                        "redirect_to": kakao_redirect_uri_env,
+                        "scopes": "account_email" # profile_image 제외하고 필요한 스코프만 지정
                     }
                 })
                 
-                # API 응답 구조 확인 및 디버깅
-                st.sidebar.write("API 응답 타입:", type(auth_response))
-                st.sidebar.json(auth_response)
-                
-                # 응답에서 URL 추출 (다양한 방법 시도)
+                # 응답에서 URL 추출
                 login_url = None
-                
-                # 1. 딕셔너리로 처리
-                if isinstance(auth_response, dict):
-                    if "url" in auth_response:
-                        login_url = auth_response["url"]
-                    elif "data" in auth_response and "url" in auth_response["data"]:
-                        login_url = auth_response["data"]["url"]
-                
-                # 2. 객체 속성으로 처리
+                if isinstance(auth_response, dict) and "url" in auth_response:
+                    login_url = auth_response["url"]
                 elif hasattr(auth_response, "url"):
                     login_url = auth_response.url
-                elif hasattr(auth_response, "data") and hasattr(auth_response.data, "url"):
-                    login_url = auth_response.data.url
                 
-                # URL이 있으면 새 창에서 열기
+                # URL이 있으면 자동으로 리다이렉트
                 if login_url:
-                    st.sidebar.success(f"로그인 URL 생성 성공")
-                    # JavaScript 대신 직접 링크 제공
-                    st.sidebar.markdown(
-                        f'<a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #FEE500; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">카카오 로그인 페이지 열기</a>',
-                        unsafe_allow_html=True
-                    )
-                    # 링크 클릭 안내 메시지
-                    st.sidebar.info("👆 위 링크를 클릭하여 카카오 로그인을 진행해주세요.")
+                    # HTML 메타 태그를 사용하여 리다이렉트
+                    redirect_html = f"""
+                    <meta http-equiv="refresh" content="0;url={login_url}">
+                    <p>카카오 로그인 페이지로 이동 중입니다...</p>
+                    """
+                    st.markdown(redirect_html, unsafe_allow_html=True)
+                    # 스크립트 실행을 중단하여 리다이렉트만 표시
+                    st.stop()
                 else:
-                    st.sidebar.error("로그인 URL을 찾을 수 없습니다. API 응답 구조를 확인하세요.")
+                    st.sidebar.error("로그인 URL을 찾을 수 없습니다.")
             except Exception as e:
                 st.sidebar.error(f"로그인 오류: {str(e)}")
-                import traceback
-                st.sidebar.code(traceback.format_exc())
     else:
         st.sidebar.success("로그인 성공!")
         if st.sidebar.button("로그아웃"):

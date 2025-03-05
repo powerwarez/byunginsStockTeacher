@@ -76,7 +76,7 @@ def main():
                     # JavaScript를 사용하여 새 창에서 로그인 페이지 열기
                     js = f"""
                     <script>
-                        window.open("{login_url}", "_blank");
+                        window.open("{login_url}", "_self");
                     </script>
                     """
                     st.markdown(js, unsafe_allow_html=True)

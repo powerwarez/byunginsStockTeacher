@@ -7,7 +7,7 @@ import urllib.parse
 # 환경변수에서 설정값 불러오기
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
-redirect_url = os.getenv("REDIRECT_URL", "https://stocksimulteacher.streamlit.app")
+redirect_url = os.getenv("KAKAO_REDIRECT_URI", "https://stocksimulteacher.streamlit.app")
 supabase: Client = create_client(supabase_url, supabase_key)
 
 # 로그인 상태 확인 함수

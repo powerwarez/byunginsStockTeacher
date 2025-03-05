@@ -50,12 +50,12 @@ def main():
         # 버튼 클릭 시 바로 카카오 로그인 처리
         if st.sidebar.button("카카오 로그인", key="kakao_login_btn"):
             try:
-                # Supabase의 OAuth 로그인 기능 사용
+                # Supabase의 OAuth 로그인 기능 사용 (불필요한 동의 항목 제외 및 account_email 스코프만 요청)
                 auth_response = supabase.auth.sign_in_with_oauth({
                     "provider": "kakao",
                     "options": {
                         "redirect_to": kakao_redirect_uri_env,
-                        "scopes": "account_email" # profile_image 제외하고 필요한 스코프만 지정
+                        "scopes": "account_email"
                     }
                 })
                 
@@ -66,15 +66,14 @@ def main():
                 elif hasattr(auth_response, "url"):
                     login_url = auth_response.url
                 
-                # URL이 있으면 자동으로 리다이렉트
+                # URL이 있으면 새 창에서 자동 리다이렉트
                 if login_url:
-                    # HTML 메타 태그를 사용하여 리다이렉트
-                    redirect_html = f"""
-                    <meta http-equiv="refresh" content="0;url={login_url}">
-                    <p>카카오 로그인 페이지로 이동 중입니다...</p>
+                    js = f"""
+                    <script>
+                        window.open("{login_url}", "_blank");
+                    </script>
                     """
-                    st.markdown(redirect_html, unsafe_allow_html=True)
-                    # 스크립트 실행을 중단하여 리다이렉트만 표시
+                    st.markdown(js, unsafe_allow_html=True)
                     st.stop()
                 else:
                     st.sidebar.error("로그인 URL을 찾을 수 없습니다.")

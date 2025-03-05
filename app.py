@@ -31,7 +31,7 @@ def main():
         # HTML 버튼에 링크를 합쳐서 새 창에서 열리도록 설정
         button_html = f"""
         <style>
-            .login-button {
+            .login-button {{
                 background-color: #FEE500;
                 border: none;
                 color: #000000;
@@ -43,7 +43,7 @@ def main():
                 margin: 4px 2px;
                 cursor: pointer;
                 border-radius: 8px;
-            }
+            }}
         </style>
         <a href='{login_url}' target='_blank'>
             <button class='login-button'>카카오 로그인</button>

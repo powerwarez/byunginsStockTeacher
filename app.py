@@ -89,14 +89,15 @@ def main():
                 # 로그인 URL 확인 및 리다이렉트
                 if sign_in_response and hasattr(sign_in_response, "url"):
                     login_url = sign_in_response.url
-                    # 현재 창에서 로그인 페이지 열기
-                    js = f"""
-                    <script>
-                        window.location.href = "{login_url}";
-                    </script>
-                    """
-                    st.markdown(js, unsafe_allow_html=True)
-                    st.stop()
+                    
+                    # JavaScript 리다이렉트 대신 클릭 가능한 링크 제공
+                    st.sidebar.success("로그인 URL이 생성되었습니다.")
+                    st.sidebar.markdown(
+                        f'<a href="{login_url}" target="_self" style="display: inline-block; padding: 10px 20px; background-color: #FEE500; color: black; text-decoration: none; border-radius: 5px; font-weight: bold; text-align: center; width: 100%;">카카오 로그인 페이지로 이동</a>',
+                        unsafe_allow_html=True
+                    )
+                    # 링크 클릭 안내 메시지
+                    st.sidebar.info("👆 위 링크를 클릭하여 카카오 로그인을 진행해주세요.")
                 else:
                     st.sidebar.error("로그인 URL을 가져올 수 없습니다.")
             except Exception as e:

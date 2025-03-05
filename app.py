@@ -2,10 +2,12 @@ import streamlit as st
 from supabase import create_client, Client
 import os
 from typing import Optional
+import urllib.parse
 
 # 환경변수에서 설정값 불러오기
 supabase_url = os.getenv("SUPABASE_URL")
 supabase_key = os.getenv("SUPABASE_KEY")
+redirect_url = os.getenv("REDIRECT_URL", "https://stocksimulteacher.streamlit.app")
 supabase: Client = create_client(supabase_url, supabase_key)
 
 # 로그인 상태 확인 함수
@@ -33,8 +35,20 @@ def main():
         st.session_state.authenticated = False
         st.session_state.user = None
     
-    # URL 파라미터 확인 (OAuth 콜백 처리)
+    # URL 파라미터 확인
     params = st.query_params
+    
+    # 오류 메시지 확인 및 표시
+    if "error" in params and "error_description" in params:
+        error = params["error"]
+        error_description = params["error_description"]
+        st.sidebar.error(f"로그인 오류: {error}")
+        st.sidebar.error(f"오류 설명: {urllib.parse.unquote(error_description)}")
+        # 오류 파라미터 제거
+        params.clear()
+        st.experimental_rerun()
+    
+    # OAuth 콜백 처리 (access_token, refresh_token 확인)
     if "access_token" in params and "refresh_token" in params:
         try:
             # 토큰으로 세션 설정
@@ -44,11 +58,13 @@ def main():
             if session:
                 st.session_state.authenticated = True
                 st.session_state.user = session.user
+                st.sidebar.success("로그인에 성공했습니다!")
             # URL 파라미터 제거
             params.clear()
             st.experimental_rerun()
         except Exception as e:
             st.sidebar.error(f"로그인 처리 중 오류가 발생했습니다: {str(e)}")
+            params.clear()
     
     # 현재 세션 확인
     current_session = get_session()
@@ -65,7 +81,7 @@ def main():
                 sign_in_response = supabase.auth.sign_in_with_oauth({
                     "provider": "kakao",
                     "options": {
-                        "redirect_to": f"{supabase_url}/auth/v1/callback",
+                        "redirect_to": redirect_url,
                         "scopes": "account_email"
                     }
                 })
@@ -73,10 +89,10 @@ def main():
                 # 로그인 URL 확인 및 리다이렉트
                 if sign_in_response and hasattr(sign_in_response, "url"):
                     login_url = sign_in_response.url
-                    # JavaScript를 사용하여 새 창에서 로그인 페이지 열기
+                    # 현재 창에서 로그인 페이지 열기
                     js = f"""
                     <script>
-                        window.open("{login_url}", "_self");
+                        window.location.href = "{login_url}";
                     </script>
                     """
                     st.markdown(js, unsafe_allow_html=True)
@@ -88,7 +104,7 @@ def main():
     else:
         # 로그인 성공 시 사용자 정보 표시
         user = st.session_state.user
-        st.sidebar.success(f"로그인 성공! 안녕하세요, {user.email if hasattr(user, 'email') else '사용자'}님!")
+        st.sidebar.success(f"로그인 성공! 안녕하세요, {user.email if hasattr(user, 'email') and user.email else '사용자'}님!")
         
         # 로그아웃 버튼
         if st.sidebar.button("로그아웃"):

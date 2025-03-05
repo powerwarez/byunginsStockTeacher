@@ -27,6 +27,11 @@ def main():
     if not st.session_state.get("logged_in", False):
         if st.sidebar.button("카카오 로그인"):
             try:
+                # 환경 변수 확인
+                st.sidebar.write(f"SUPABASE_URL: {supabase_url[:10]}..." if supabase_url else "SUPABASE_URL 없음")
+                st.sidebar.write(f"SUPABASE_KEY: {supabase_key[:5]}..." if supabase_key else "SUPABASE_KEY 없음")
+                st.sidebar.write(f"REDIRECT_URI: {kakao_redirect_uri_env}" if kakao_redirect_uri_env else "REDIRECT_URI 없음")
+                
                 # Supabase의 OAuth 로그인 기능 사용
                 auth_response = supabase.auth.sign_in_with_oauth({
                     "provider": "kakao",
@@ -35,9 +40,12 @@ def main():
                     }
                 })
                 
+                # API 응답 구조 확인
+                st.sidebar.write("API 응답:", auth_response)
+                
                 # 로그인 URL로 리다이렉트
-                if auth_response and "url" in auth_response:
-                    login_url = auth_response["url"]
+                if auth_response and hasattr(auth_response, "url"):
+                    login_url = auth_response.url
                     # JavaScript를 사용하여 새 창에서 로그인 URL 열기
                     js = f"""
                     <script>
@@ -45,10 +53,20 @@ def main():
                     </script>
                     """
                     st.markdown(js, unsafe_allow_html=True)
+                elif auth_response and isinstance(auth_response, dict) and "url" in auth_response:
+                    login_url = auth_response["url"]
+                    js = f"""
+                    <script>
+                        window.open("{login_url}", "_blank");
+                    </script>
+                    """
+                    st.markdown(js, unsafe_allow_html=True)
                 else:
-                    st.sidebar.error("로그인 URL을 가져올 수 없습니다.")
+                    st.sidebar.error("로그인 URL을 가져올 수 없습니다. API 응답 구조를 확인하세요.")
             except Exception as e:
                 st.sidebar.error(f"로그인 오류: {str(e)}")
+                import traceback
+                st.sidebar.code(traceback.format_exc())
     else:
         st.sidebar.success("로그인 성공!")
         if st.sidebar.button("로그아웃"):

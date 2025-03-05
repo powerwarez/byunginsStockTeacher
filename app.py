@@ -14,14 +14,14 @@ def main():
         st.session_state["logged_in"] = False
     
     # URL 파라미터에서 access_token과 refresh_token 확인
-    params = st.experimental_get_query_params()
+    params = st.query_params
     if "access_token" in params and "refresh_token" in params:
         # 토큰이 있으면 로그인 성공으로 간주
         st.session_state["logged_in"] = True
-        st.session_state["access_token"] = params["access_token"][0]
-        st.session_state["refresh_token"] = params["refresh_token"][0]
+        st.session_state["access_token"] = params["access_token"]
+        st.session_state["refresh_token"] = params["refresh_token"]
         # 토큰 정보 저장 후 URL 파라미터 제거
-        st.experimental_set_query_params()
+        params.clear()
 
     st.sidebar.title("메뉴")
     if not st.session_state.get("logged_in", False):

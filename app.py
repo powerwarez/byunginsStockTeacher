@@ -62,13 +62,14 @@ def main():
                 
                 # URL이 있으면 새 창에서 열기
                 if login_url:
-                    st.sidebar.success(f"로그인 URL 생성 성공: {login_url[:30]}...")
-                    js = f"""
-                    <script>
-                        window.open("{login_url}", "_blank");
-                    </script>
-                    """
-                    st.markdown(js, unsafe_allow_html=True)
+                    st.sidebar.success(f"로그인 URL 생성 성공")
+                    # JavaScript 대신 직접 링크 제공
+                    st.sidebar.markdown(
+                        f'<a href="{login_url}" target="_blank" style="display: inline-block; padding: 10px 20px; background-color: #FEE500; color: black; text-decoration: none; border-radius: 5px; font-weight: bold;">카카오 로그인 페이지 열기</a>',
+                        unsafe_allow_html=True
+                    )
+                    # 링크 클릭 안내 메시지
+                    st.sidebar.info("👆 위 링크를 클릭하여 카카오 로그인을 진행해주세요.")
                 else:
                     st.sidebar.error("로그인 URL을 찾을 수 없습니다. API 응답 구조를 확인하세요.")
             except Exception as e:

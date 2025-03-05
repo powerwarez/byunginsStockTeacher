@@ -40,21 +40,29 @@ def main():
                     }
                 })
                 
-                # API 응답 구조 확인
-                st.sidebar.write("API 응답:", auth_response)
+                # API 응답 구조 확인 및 디버깅
+                st.sidebar.write("API 응답 타입:", type(auth_response))
+                st.sidebar.json(auth_response)
                 
-                # 로그인 URL로 리다이렉트
-                if auth_response and hasattr(auth_response, "url"):
+                # 응답에서 URL 추출 (다양한 방법 시도)
+                login_url = None
+                
+                # 1. 딕셔너리로 처리
+                if isinstance(auth_response, dict):
+                    if "url" in auth_response:
+                        login_url = auth_response["url"]
+                    elif "data" in auth_response and "url" in auth_response["data"]:
+                        login_url = auth_response["data"]["url"]
+                
+                # 2. 객체 속성으로 처리
+                elif hasattr(auth_response, "url"):
                     login_url = auth_response.url
-                    # JavaScript를 사용하여 새 창에서 로그인 URL 열기
-                    js = f"""
-                    <script>
-                        window.open("{login_url}", "_blank");
-                    </script>
-                    """
-                    st.markdown(js, unsafe_allow_html=True)
-                elif auth_response and isinstance(auth_response, dict) and "url" in auth_response:
-                    login_url = auth_response["url"]
+                elif hasattr(auth_response, "data") and hasattr(auth_response.data, "url"):
+                    login_url = auth_response.data.url
+                
+                # URL이 있으면 새 창에서 열기
+                if login_url:
+                    st.sidebar.success(f"로그인 URL 생성 성공: {login_url[:30]}...")
                     js = f"""
                     <script>
                         window.open("{login_url}", "_blank");
@@ -62,7 +70,7 @@ def main():
                     """
                     st.markdown(js, unsafe_allow_html=True)
                 else:
-                    st.sidebar.error("로그인 URL을 가져올 수 없습니다. API 응답 구조를 확인하세요.")
+                    st.sidebar.error("로그인 URL을 찾을 수 없습니다. API 응답 구조를 확인하세요.")
             except Exception as e:
                 st.sidebar.error(f"로그인 오류: {str(e)}")
                 import traceback
